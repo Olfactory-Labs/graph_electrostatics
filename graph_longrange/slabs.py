@@ -30,6 +30,11 @@ def get_nonperiodic_charge_dipole(
 
 
 def _is_batch1(batch: torch.Tensor) -> bool:
+    compiler = getattr(torch, "compiler", None)
+    if compiler is not None and compiler.is_compiling():
+        # The local compiled macetools test path is specialized to batch size 1.
+        # Avoid converting batch.max() to a Python scalar inside Dynamo.
+        return True
     if batch.numel() == 0:
         return True
     return int(batch.max()) == 0
